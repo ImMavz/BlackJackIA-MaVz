@@ -1,5 +1,5 @@
 "use client"
-
+import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -98,10 +98,11 @@ const PlayingCardComponent = ({
   const SuitIcon = suits[card.suit].icon
 
   return (
-    <div
-      className={`w-20 h-28 bg-white border-2 border-gray-300 rounded-lg shadow-lg flex flex-col justify-between p-2 transition-all duration-500 transform ${
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      }`}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: animationDelay / 1000, duration: 0.5, ease: "easeOut" }}
+      className="w-20 h-28 bg-white border-2 border-gray-300 rounded-lg shadow-lg flex flex-col justify-between p-2"
     >
       {isHidden ? (
         <div className="w-full h-full bg-blue-600 rounded flex items-center justify-center">
@@ -122,7 +123,7 @@ const PlayingCardComponent = ({
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -305,8 +306,8 @@ export default function BlackjackGame() {
     const dealerValue = calculateHandValue(dealerHand)
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-800 to-green-600 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="min-h-screen bg-green-900 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-5xl bg-green-800 rounded-[40px] shadow-inner border-[6px] border-yellow-700 p-6 md:p-10 space-y-10">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <Button variant="ghost" className="text-white hover:bg-green-700" onClick={() => setGameState("menu")}>
