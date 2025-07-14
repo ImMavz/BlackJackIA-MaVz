@@ -2,6 +2,7 @@
 import { motion } from "framer-motion"
 import ThemeToggle from "@/components/ThemeToggle"
 import FichasApuesta from "@/components/FichasApuestas"
+import AnimatedBetChip from "@/components/AnimatedBetChip"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -139,6 +140,9 @@ export default function BlackjackGame() {
   const [isDealing, setIsDealing] = useState(false)
   const [balance, setBalance] = useState(1000)
   const [bet, setBet] = useState(0)
+  const [showChip, setShowChip] = useState(false)
+  const [wonChip, setWonChip] = useState(false)
+
 
 
   const startNewGame = () => {
@@ -163,6 +167,8 @@ export default function BlackjackGame() {
             setDeck(newDeck.slice(4))
             setIsDealing(false)
             setGamePhase("player-turn")
+            setShowChip(true)
+            setWonChip(false)
           }, 600)
         }, 600)
       }, 600)
@@ -220,13 +226,19 @@ export default function BlackjackGame() {
         } else {
           // Dealer se planta: comparar
           if (playerValue > dealerValue) {
-            setGameResult("¡Tú ganas!")
-            setBalance((prev) => prev + bet * 2)
+              setGameResult("¡Tú ganas!")
+              setBalance((prev) => prev + bet * 2)
+              setWonChip(true)
+              setTimeout(() => setShowChip(false), 1000) // ficha vuela de regreso
           } else if (dealerValue > playerValue) {
             setGameResult("Dealer gana")
+            setWonChip(false)
+            setTimeout(() => setShowChip(false), 1000)
           } else {
             setGameResult("¡Empate!")
             setBalance((prev) => prev + bet)
+            setWonChip(true)
+            setTimeout(() => setShowChip(false), 1000)
           }
           setBet(0)
           setGamePhase("game-over")
@@ -346,6 +358,7 @@ export default function BlackjackGame() {
 
     return (
       <div className="min-h-screen bg-green-900 dark:bg-neutral-900 transition-colors duration-500 ...">
+        <AnimatedBetChip visible={showChip} won={wonChip} keyId={gameResult} />
         <div className="w-full max-w-5xl bg-green-800 dark:bg-neutral-800 rounded-[40px] shadow-inner border-[6px] border-yellow-700 dark:border-yellow-600 p-6 md:p-10 space-y-10">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
