@@ -1,5 +1,7 @@
 "use client"
 import { motion } from "framer-motion"
+import ThemeToggle from "@/components/ThemeToggle"
+import FichasApuesta from "@/components/FichasApuestas"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -135,6 +137,9 @@ export default function BlackjackGame() {
   const [dealerHand, setDealerHand] = useState<PlayingCard[]>([])
   const [gameResult, setGameResult] = useState<string>("")
   const [isDealing, setIsDealing] = useState(false)
+  const [balance, setBalance] = useState(1000)
+  const [bet, setBet] = useState(0)
+
 
   const startNewGame = () => {
     const newDeck = createDeck()
@@ -181,39 +186,55 @@ export default function BlackjackGame() {
 
   const stand = () => {
     setGamePhase("dealer-turn")
-
+    
     // Simular el turno del dealer
     setTimeout(() => {
       const currentDealerHand = [...dealerHand]
       let currentDeck = [...deck]
+      
 
-      const dealerPlay = () => {
+    const dealerPlay = () => {
+      const currentDealerHand = [...dealerHand]
+      let currentDeck = [...deck]
+
+      const playStep = () => {
         const dealerValue = calculateHandValue(currentDealerHand)
+        const playerValue = calculateHandValue(playerHand)
+
+        if (dealerValue > 21) {
+          setDealerHand([...currentDealerHand])
+          setGameResult("¡Dealer se pasó! Tú ganas")
+          setBalance((prev) => prev + bet * 2)
+          setBet(0)
+          setGamePhase("game-over")
+          return
+        }
 
         if (dealerValue < 17) {
-          currentDealerHand.push(currentDeck[0])
+          const newCard = currentDeck[0]
+          currentDealerHand.push(newCard)
           currentDeck = currentDeck.slice(1)
           setDealerHand([...currentDealerHand])
           setDeck([...currentDeck])
-          setTimeout(dealerPlay, 1000)
+          setTimeout(playStep, 1000)
         } else {
-          // Determinar ganador
-          const playerValue = calculateHandValue(playerHand)
-          const finalDealerValue = calculateHandValue(currentDealerHand)
-
-          if (finalDealerValue > 21) {
-            setGameResult("¡Dealer se pasó! Tú ganas")
-          } else if (playerValue > finalDealerValue) {
+          // Dealer se planta: comparar
+          if (playerValue > dealerValue) {
             setGameResult("¡Tú ganas!")
-          } else if (finalDealerValue > playerValue) {
+            setBalance((prev) => prev + bet * 2)
+          } else if (dealerValue > playerValue) {
             setGameResult("Dealer gana")
           } else {
             setGameResult("¡Empate!")
+            setBalance((prev) => prev + bet)
           }
+          setBet(0)
           setGamePhase("game-over")
         }
       }
 
+      playStep()
+    }
       dealerPlay()
     }, 1000)
   }
@@ -226,12 +247,30 @@ export default function BlackjackGame() {
           <CardDescription className="text-lg">Juego con IA</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={startNewGame} className="w-full h-12 text-lg bg-green-600 hover:bg-green-700">
-            🎮 Jugar
+          <FichasApuesta
+            balance={balance}
+            bet={bet}
+            onApostar={(valor) => {
+              if (balance >= valor) {
+                setBet(bet + valor)
+                setBalance(balance - valor)
+              }
+            }}
+          />
+
+          <Button
+            onClick={startNewGame}
+            className="w-full h-12 text-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 mt-4"
+            disabled={bet === 0}
+          >
+            🎮 Apostar y jugar
           </Button>
           <Button onClick={() => setGameState("rules")} variant="outline" className="w-full h-12 text-lg">
             📖 Cómo Jugar
           </Button>
+            <div className="flex justify-center">
+            <ThemeToggle />
+            </div>
         </CardContent>
       </Card>
     </div>
@@ -306,22 +345,22 @@ export default function BlackjackGame() {
     const dealerValue = calculateHandValue(dealerHand)
 
     return (
-      <div className="min-h-screen bg-green-900 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-5xl bg-green-800 rounded-[40px] shadow-inner border-[6px] border-yellow-700 p-6 md:p-10 space-y-10">
+      <div className="min-h-screen bg-green-900 dark:bg-neutral-900 transition-colors duration-500 ...">
+        <div className="w-full max-w-5xl bg-green-800 dark:bg-neutral-800 rounded-[40px] shadow-inner border-[6px] border-yellow-700 dark:border-yellow-600 p-6 md:p-10 space-y-10">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
-            <Button variant="ghost" className="text-white hover:bg-green-700" onClick={() => setGameState("menu")}>
+            <Button variant="ghost" className="text-white dark:text-gray-200 hover:bg-green-700" onClick={() => setGameState("menu")}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Menú
             </Button>
-            <h1 className="text-3xl font-bold text-white">🃏 BLACKJACK</h1>
+            <h1 className="text-3xl font-bold text-white dark:text-gray-200">🃏 BLACKJACK</h1>
             <div></div>
           </div>
 
           {/* Dealer Section */}
           <div className="bg-green-700 rounded-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">🤖 Dealer</h2>
+              <h2 className="text-xl font-semibold text-white dark:text-gray-200">🤖 Dealer</h2>
               <Badge variant="secondary" className="text-lg px-3 py-1">
                 {gamePhase === "player-turn" && dealerHand.length > 1 ? "?" : dealerValue}
               </Badge>
@@ -341,7 +380,7 @@ export default function BlackjackGame() {
           {/* Player Section */}
           <div className="bg-green-700 rounded-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">👤 Jugador</h2>
+              <h2 className="text-xl font-semibold text-white dark:text-gray-200">👤 Jugador</h2>
               <Badge variant="secondary" className="text-lg px-3 py-1">
                 {playerValue}
               </Badge>
@@ -355,25 +394,25 @@ export default function BlackjackGame() {
 
           {/* Game Controls */}
           <div className="text-center">
-            {isDealing && <div className="text-white text-xl mb-4">🎴 Repartiendo cartas...</div>}
+            {isDealing && <div className="text-white dark:text-gray-200 text-xl mb-4">🎴 Repartiendo cartas...</div>}
 
             {gamePhase === "player-turn" && (
               <div className="space-x-4">
-                <Button onClick={hit} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg">
+                <Button onClick={hit} className="bg-blue-600 hover:bg-blue-700 text-white dark:text-gray-200 px-8 py-3 text-lg">
                   🃏 Pedir Carta
                 </Button>
-                <Button onClick={stand} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-lg">
+                <Button onClick={stand} className="bg-red-600 hover:bg-red-700 text-white dark:text-gray-200 px-8 py-3 text-lg">
                   ✋ Plantarse
                 </Button>
               </div>
             )}
 
-            {gamePhase === "dealer-turn" && <div className="text-white text-xl">🤖 Turno del Dealer...</div>}
+            {gamePhase === "dealer-turn" && <div className="text-white dark:text-gray-200 text-xl">🤖 Turno del Dealer...</div>}
 
             {gamePhase === "game-over" && (
               <div className="space-y-4">
-                <div className="text-2xl font-bold text-white">{gameResult}</div>
-                <Button onClick={startNewGame} className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg">
+                <div className="text-2xl font-bold text-white dark:text-gray-200">{gameResult}</div>
+                <Button onClick={startNewGame} className="bg-green-600 hover:bg-green-700 text-white dark:text-gray-200 px-8 py-3 text-lg">
                   🔄 Nueva Partida
                 </Button>
               </div>
