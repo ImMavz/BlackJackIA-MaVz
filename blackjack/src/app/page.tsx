@@ -1,6 +1,6 @@
 "use client"
 
-import BlackjackGame from "./blackjack-ia"
+import BlackjackGame from ".."
 
 export default function Page() {
   return <BlackjackGame />
